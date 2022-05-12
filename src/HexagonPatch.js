@@ -578,6 +578,50 @@ function validateFaces(faces)
     }
 }
 
+function fixEdges(faces)
+{
+    const ids = getSetOfIds(faces);
+
+    let connectedCount = 0
+    let notConnectedCount = 0
+    for (let i = 0; i < faces.length; i++)
+    {
+
+        const face = faces[i];
+        const start = face.halfEdge;
+        let curr = start;
+        do
+        {
+            const { twin } = curr
+            if (twin)
+            {
+                if (curr.edge !== twin.edge)
+                {
+                    console.log("Edge mismatch")
+                }
+
+                const { edge } = curr
+
+                if (edge.halfEdge !== curr && edge.halfEdge !== twin)
+                {
+                    // fix edge pointer
+                    edge.halfEdge = curr
+                    notConnectedCount++
+                }
+                else
+                {
+                    connectedCount++
+                }
+            }
+
+
+            curr = curr.next
+        } while (curr !== start)
+    }
+
+    //console.log({connectedCount, notConnectedCount})
+}
+
 /////////////////////////////////////////
 
 
@@ -779,7 +823,7 @@ export default class HexagonPatch
         const edges = [...findInsideEdges(faces)]
         shuffle(edges)
 
-        const count = 0 | (edges.length * 0.2)
+        const count = 0 | (edges.length * 0.5 * Math.random())
         for (let i = 0; i < count; i++)
         {
             const edge = edges[i];
@@ -790,6 +834,7 @@ export default class HexagonPatch
         quickFix(faces)
         relax(faces)
         pixelatePositions(faces)
+        fixEdges(faces)
         // faces.forEach(validateFace)
         // validateFaces(faces)
         return faces;

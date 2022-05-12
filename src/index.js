@@ -1,8 +1,9 @@
 import domready from "domready"
 import "./style.css"
 import HexagonPatch from "./HexagonPatch"
-import randomPalette from "./randomPalette"
+import randomPalette, { randomPaletteWithBlack } from "./randomPalette"
 import Color from "./Color"
+import { Shape } from "./geometry"
 const PHI = (1 + Math.sqrt(5)) / 2;
 const TAU = Math.PI * 2;
 const DEG2RAD_FACTOR = TAU / 360;
@@ -155,13 +156,45 @@ function centerPoint(halfEdge)
         cx + (x0 + x1)/2,
         cy + (y0 + y1)/2
     ]
+}
+
+
+
+function mergeShapes(faces, start, end)
+{
+
+
+
+    const startShape = start.edge.shape
+    const endShape = end.edge.shape
+
+    let oldShape = null;
+    if (!startShape)
+    {
+        oldShape = endShape
+    }
+    if (!endShape)
+    {
+        oldShape = startShape
+    }
+
+    if (oldShape)
+    {
+        for (let i = 0; i < faces.length; i++)
+        {
+            const face = faces[i]
+            
+        }
+    }
+
+    const shape = startShape.concat(endShape)
 
 }
 
 
-function truchetFace(palette, face, hexagonSize)
+function truchetFace(palette, faces, face)
 {
-    const { width, height} = config;
+    const { width, height } = config;
 
     const cx = width/2;
     const cy = height/2;
@@ -181,72 +214,157 @@ function truchetFace(palette, face, hexagonSize)
     const [x0,y0] = centerPoint(start)
     const [x2,y2] = centerPoint(end)
 
-    const color = start.color || end.color || (start.twin && start.twin.color)|| (end.twin && end.twin.color) || palette[0 | Math.random() * palette.length]
-    start.color = color
-    if (start.twin)
-    {
-        start.twin.color = color
-    }
-    end.color = color
-    if (end.twin)
-    {
-        end.twin.color = color
-    }
-    ctx.strokeStyle = color
-    ctx.beginPath()
-    ctx.moveTo(
-        x0,
-        y0
-    );
-    ctx.arcTo(
-        x1 + cx,
-        y1 + cy,
-        x2,
-        y2,
-        Math.round(hexagonSize * 0.15)
-    );
-    ctx.lineTo(
-        x2,
-        y2
-    );
-    ctx.stroke()
-
-    let curr = start
-    let count = 0;
-    do
-    {
-        if (!curr.color && !(curr.twin && curr.twin.color))
-        {
-
-            const [x0,y0] = centerPoint(curr)
-
-            const color = palette[0 | Math.random() * palette.length]
-            ctx.strokeStyle = color
-            ctx.beginPath()
-            ctx.moveTo(
-                x0,
-                y0
-            );
-            ctx.lineTo(
-                x0,
-                y0
-            );
-            ctx.stroke()
-
-            curr.color = color
-            if (curr.twin)
-            {
-                curr.twin.color = color
-            }
-        }
-
-        count++;
-        curr = curr.next;
-    }  while (curr !== start)
+    const shape = Shape.merge(start, end)
+    shape.points.push(
+        [
+            x0,y0,
+            x1 + cx, y1 + cy,
+            x2, y2
+        ]
+    )
 
 }
 
 const black = new Color(0,0,0)
+
+
+function paintShapes(faces, background)
+{
+    const { hexagonSize, palette } = config
+
+    const shapes = new Set()
+
+    faces.forEach(
+        face => {
+            const start = face.halfEdge;
+            let curr = start
+            do
+            {
+                const { shape } = curr.edge
+                if (shape)
+                {
+                    shapes.add(shape)
+                }
+
+                curr = curr.next;
+            }  while (curr !== start)
+        }
+    )
+
+    ctx.lineWidth = Math.round(hexagonSize * 0.12)
+    ctx.lineJoin = "round"
+    ctx.lineCap = "round"
+
+    for (let shape of shapes)
+    {
+        let index
+        do
+        {
+            index = 0 | Math.random() * palette.length
+        } while(index === background)
+        const color = palette[index]
+        ctx.strokeStyle = color
+
+        const { points } = shape
+
+        for (let i = 0; i < points.length; i++)
+        {
+            const elem = points[i]
+            if (elem.length === 6)
+            {
+                const [ x0,y0, x1, y1, x2 , y2 ] = elem
+
+                ctx.beginPath()
+                ctx.moveTo(
+                    x0,
+                    y0
+                );
+                ctx.arcTo(
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    Math.round(hexagonSize * 0.15)
+                );
+                ctx.lineTo(
+                    x2,
+                    y2
+                );
+                ctx.stroke()
+
+            }
+            else if (elem.length === 2)
+            {
+                const [ x0,y0 ] = elem
+
+                ctx.beginPath()
+                ctx.moveTo(
+                    x0,
+                    y0
+                );
+                ctx.lineTo(
+                    x0,
+                    y0
+                );
+                ctx.stroke()
+            }
+            else
+            {
+                throw new Error("Invalid shape element" + JSON.stringify(elem))
+            }
+        }
+    }
+}
+
+function mapKey(x,y)
+{
+    return Math.round(x) + "/" + Math.round(y)
+}
+
+function checkCentroids(faces)
+{
+
+    const { width, height} = config;
+
+    const cx = width/2;
+    const cy = height/2;
+
+
+    const centroids = new Map()
+
+    faces.forEach(
+        face => {
+            const [x,y] = face.centroid
+
+            const key = mapKey(x,y)
+            const e = centroids.get(key)
+            if (e)
+            {
+                e.count++
+            }
+            else
+            {
+                centroids.set(key, {
+                    x,
+                    y,
+                    count: 1
+                })
+            }
+        }
+    )
+
+    for (let {x,y,count} of centroids.values())
+    {
+        ctx.fillStyle = count === 1 ? "#0f0" : "#f0f"
+        ctx.fillRect(cx + x-1,cy + y-1,2,2)
+
+        if (count > 1)
+        {
+            console.log("Duplicated centroid", count)
+        }
+    }
+}
+
 
 domready(
     () => {
@@ -268,25 +386,35 @@ domready(
             const palette = randomPalette()
 
             const hexagonSize = Math.round(width * (0.05 + Math.random() * 0.05))
+            config.hexagonSize = hexagonSize
+            config.palette = palette
             const patch = new HexagonPatch(0, 0, hexagonSize)
 
             const faces = patch.build();
-            ctx.fillStyle = Math.random() < 0.5 ? "#000" : Color.from(palette[0|Math.random() * palette.length]).mix(black, 0.6).toRGBHex()
+            let background = 0 | Math.random() * palette.length
+
+            if (Math.random() < 0.5)
+            {
+                ctx.fillStyle = "#000"
+                background = null
+            }
+            else
+            {
+                ctx.fillStyle = palette[background]
+            }
             ctx.fillRect(0,0, width, height);
 
-            // faces.forEach( face => {
-            //     renderDebugFace(face, true, false)
-            // })
-
-            ctx.save()
-            ctx.lineWidth = Math.round(hexagonSize * 0.12)
-            ctx.lineJoin = "round"
-            ctx.lineCap = "round"
-
             faces.forEach( face => {
-                truchetFace(palette, face, hexagonSize)
+                truchetFace(palette, faces, face)
             })
 
+            paintShapes(faces, background)
+
+            // ctx.lineWidth = 1
+            // faces.forEach( face => {
+            //
+            //      renderDebugFace(face, false, false)
+            // })
         }
 
         paint()

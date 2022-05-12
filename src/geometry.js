@@ -61,6 +61,14 @@ export class Edge
      * @type {HalfEdge}
      */
     halfEdge = null;
+
+    /**
+     * Shaped attached to that halfEdge
+     * 
+     * @type {Shape}
+     */
+    shape = null
+
     constructor(halfEdge)
     {
         this.halfEdge = halfEdge;
@@ -179,14 +187,6 @@ export class HalfEdge
      */
     face = null;
 
-
-    /**
-     * Color storage per half edge
-     *
-     * @type {String}
-     */
-    color = null
-
     constructor(next, vertex, edge, face)
     {
         this.next = next;
@@ -253,4 +253,84 @@ export class HalfEdge
         return curr;
     }
 
+}
+
+export class Shape
+{
+    points = []
+    edges = new Set()
+
+    registerShape()
+    {
+        const { edges } = this
+        for (let edge of edges)
+        {
+            edge.shape = this
+        }
+    }
+
+    addEdges(edges)
+    {
+        if (edges instanceof Set)
+        {
+            for (let edge of edges)
+            {
+                this.edges.add(edge)
+            }
+        }
+        else
+        {
+            this.edges.add(edges)
+        }
+    }
+
+    static merge(start, end)
+    {
+        const startShape = start.edge.shape
+        const endShape = end.edge.shape
+
+        if (!startShape)
+        {
+            if (endShape)
+            {
+                start.edge.shape = endShape
+                endShape.addEdges(start.edge)
+                return endShape
+            }
+        }
+
+        if (!endShape)
+        {
+            if (startShape)
+            {
+                end.edge.shape = startShape
+                startShape.addEdges(end.edge)
+                return startShape
+            }
+        }
+
+        // both shapes null is still in the mix
+        
+        const newShape = new Shape()
+        if (startShape)
+        {
+            newShape.addEdges(startShape.edges)
+        }
+        else
+        {
+            newShape.addEdges(start.edge)
+        }
+
+        if (endShape)
+        {
+            newShape.addEdges(endShape.edges)
+        }
+        else
+        {
+            newShape.addEdges(end.edge)
+        }
+        newShape.registerShape()
+
+        return newShape
+    }
 }
