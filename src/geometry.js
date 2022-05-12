@@ -179,6 +179,14 @@ export class HalfEdge
      */
     face = null;
 
+
+    /**
+     * Color storage per half edge
+     *
+     * @type {String}
+     */
+    color = null
+
     constructor(next, vertex, edge, face)
     {
         this.next = next;

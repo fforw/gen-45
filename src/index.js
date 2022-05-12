@@ -181,7 +181,18 @@ function truchetFace(palette, face, hexagonSize)
     const [x0,y0] = centerPoint(start)
     const [x2,y2] = centerPoint(end)
 
-    ctx.strokeStyle = palette[0|Math.random() * palette.length]
+    const color = start.color || end.color || (start.twin && start.twin.color)|| (end.twin && end.twin.color) || palette[0 | Math.random() * palette.length]
+    start.color = color
+    if (start.twin)
+    {
+        start.twin.color = color
+    }
+    end.color = color
+    if (end.twin)
+    {
+        end.twin.color = color
+    }
+    ctx.strokeStyle = color
     ctx.beginPath()
     ctx.moveTo(
         x0,
@@ -204,12 +215,13 @@ function truchetFace(palette, face, hexagonSize)
     let count = 0;
     do
     {
-        if (curr !== start && curr !== end)
+        if (!curr.color && !(curr.twin && curr.twin.color))
         {
 
             const [x0,y0] = centerPoint(curr)
 
-            ctx.strokeStyle = palette[0|Math.random() * palette.length]
+            const color = palette[0 | Math.random() * palette.length]
+            ctx.strokeStyle = color
             ctx.beginPath()
             ctx.moveTo(
                 x0,
@@ -220,6 +232,12 @@ function truchetFace(palette, face, hexagonSize)
                 y0
             );
             ctx.stroke()
+
+            curr.color = color
+            if (curr.twin)
+            {
+                curr.twin.color = color
+            }
         }
 
         count++;
@@ -253,8 +271,6 @@ domready(
             const patch = new HexagonPatch(0, 0, hexagonSize)
 
             const faces = patch.build();
-
-            console.log("lineWidth", ctx.lineWidth)
             ctx.fillStyle = Math.random() < 0.5 ? "#000" : Color.from(palette[0|Math.random() * palette.length]).mix(black, 0.6).toRGBHex()
             ctx.fillRect(0,0, width, height);
 
@@ -266,7 +282,6 @@ domready(
             ctx.lineWidth = Math.round(hexagonSize * 0.12)
             ctx.lineJoin = "round"
             ctx.lineCap = "round"
-            ctx.strokeStyle = "#f0f"
 
             faces.forEach( face => {
                 truchetFace(palette, face, hexagonSize)
