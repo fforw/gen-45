@@ -201,32 +201,36 @@ function truchetFace(palette, faces, face)
 
     const start = face.halfEdge;
 
-    const choice = 0|Math.random() * 4
-
-    let end = start;
-    for (let i=0; i < choice; i++)
-    {
-        end = end.next
-    }
+    const repeat = Math.floor(1 + Math.random() * 2)
 
     const [x1, y1] = face.centroid
 
-    const [x0,y0] = centerPoint(start)
-    const [x2,y2] = centerPoint(end)
+    for (let i=0; i < repeat; i++)
+    {
+        const choice = 0|Math.random() * 4
 
-    const shape = Shape.merge(start, end)
-    shape.points.push(
-        [
-            x0,y0,
-            x1 + cx, y1 + cy,
-            x2, y2
-        ]
-    )
+        let end = start;
+        for (let i=0; i < choice; i++)
+        {
+            end = end.next
+        }
 
+
+        const [x0,y0] = centerPoint(start)
+        const [x2,y2] = centerPoint(end)
+
+        const shape = Shape.merge(start, end)
+
+        shape.points.push(
+            [
+                x0,y0,
+                x1 + cx, y1 + cy,
+                x2, y2
+            ]
+        )
+
+    }
 }
-
-const black = new Color(0,0,0)
-
 
 function paintShapes(faces, background)
 {
@@ -265,8 +269,8 @@ function paintShapes(faces, background)
         const color = palette[index]
         ctx.strokeStyle = color
 
+        ctx.beginPath()
         const { points } = shape
-
         for (let i = 0; i < points.length; i++)
         {
             const elem = points[i]
@@ -274,7 +278,6 @@ function paintShapes(faces, background)
             {
                 const [ x0,y0, x1, y1, x2 , y2 ] = elem
 
-                ctx.beginPath()
                 ctx.moveTo(
                     x0,
                     y0
@@ -290,14 +293,11 @@ function paintShapes(faces, background)
                     x2,
                     y2
                 );
-                ctx.stroke()
 
             }
             else if (elem.length === 2)
             {
                 const [ x0,y0 ] = elem
-
-                ctx.beginPath()
                 ctx.moveTo(
                     x0,
                     y0
@@ -306,13 +306,13 @@ function paintShapes(faces, background)
                     x0,
                     y0
                 );
-                ctx.stroke()
             }
             else
             {
                 throw new Error("Invalid shape element" + JSON.stringify(elem))
             }
         }
+        ctx.stroke()
     }
 }
 

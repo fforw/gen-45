@@ -269,6 +269,11 @@ export class Shape
         }
     }
 
+    addPoints(pts)
+    {
+        this.points = this.points.concat(pts)
+    }
+
     addEdges(edges)
     {
         if (edges instanceof Set)
@@ -314,6 +319,7 @@ export class Shape
         const newShape = new Shape()
         if (startShape)
         {
+            newShape.addPoints(startShape.points)
             newShape.addEdges(startShape.edges)
         }
         else
@@ -323,6 +329,7 @@ export class Shape
 
         if (endShape)
         {
+            newShape.addPoints(endShape.points)
             newShape.addEdges(endShape.edges)
         }
         else
