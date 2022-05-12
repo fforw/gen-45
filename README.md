@@ -1,3 +1,3 @@
-# Simple Starter
+# gen-45
 
-Simple JS build starter for simple, client-only demos.
+Truchet like patterns on a TownScaper-ish grid. 
