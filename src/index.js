@@ -200,7 +200,8 @@ function truchetFace(palette, faces, face)
     const cy = height/2;
 
 
-    const repeat = Math.floor(1 + Math.random() * 2)
+
+    const repeat = Math.floor(1 + Math.random() * 3)
 
     const [x1, y1] = face.centroid
 
