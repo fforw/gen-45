@@ -199,7 +199,6 @@ function truchetFace(palette, faces, face)
     const cx = width/2;
     const cy = height/2;
 
-    const start = face.halfEdge;
 
     const repeat = Math.floor(1 + Math.random() * 2)
 
@@ -207,12 +206,13 @@ function truchetFace(palette, faces, face)
 
     for (let i=0; i < repeat; i++)
     {
-        const choice = 0|Math.random() * 4
+        const choiceA = 0|Math.random() * 4
+        const choiceB = 0|Math.random() * 4
 
-        let end = start;
-        for (let i=0; i < choice; i++)
+        const start = face.nthHalfEdge(choiceA);
+        const end = face.nthHalfEdge(choiceB);
+
         {
-            end = end.next
         }
 
 

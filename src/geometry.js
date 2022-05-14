@@ -149,6 +149,17 @@ export class Face
 
         return [x / count, y / count, z/count];
     }
+
+    nthHalfEdge(n)
+    {
+        let curr = this.halfEdge;
+        for (let i=0; i < n; i++)
+        {
+            curr = curr.next
+        }
+
+        return curr
+    }
 }
 
 let counter = 0;
