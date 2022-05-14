@@ -286,7 +286,7 @@ function paintShapes(faces, background)
                     y1,
                     x2,
                     y2,
-                    Math.round(hexagonSize * 0.15)
+                    Math.round(hexagonSize * 0.16)
                 );
                 ctx.lineTo(
                     x2,
