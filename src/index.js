@@ -212,23 +212,21 @@ function truchetFace(palette, faces, face)
         const start = face.nthHalfEdge(choiceA);
         const end = face.nthHalfEdge(choiceB);
 
+        if (!start.edge.shape || !end.edge.shape)
         {
+            const [x0,y0] = centerPoint(start)
+            const [x2,y2] = centerPoint(end)
+
+            const shape = Shape.merge(start, end)
+
+            shape.points.push(
+                [
+                    x0,y0,
+                    x1 + cx, y1 + cy,
+                    x2, y2
+                ]
+            )
         }
-
-
-        const [x0,y0] = centerPoint(start)
-        const [x2,y2] = centerPoint(end)
-
-        const shape = Shape.merge(start, end)
-
-        shape.points.push(
-            [
-                x0,y0,
-                x1 + cx, y1 + cy,
-                x2, y2
-            ]
-        )
-
     }
 }
 
